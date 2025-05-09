@@ -1,0 +1,207 @@
+\documentclass[manuscript,screen,review,nonacm]{acmart}
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+\usepackage{pifont}
+\begin{document}
+
+
+\title{Understanding the mathematics of the Knapsack public key cryptosystem}
+
+\author{Supreme Paudel}
+\affiliation{%
+  \institution{Luther College}
+  \city{Decorah}
+  \country{USA}}
+\email{paudsu01@luther.edu}
+
+
+\begin{abstract}
+The Merkle–Hellman knapsack cryptosystem is an early public-key cryptosystem based on the NP-complete subset sum problem. Although the original scheme has been proven insecure, it remains a valuable subject of study for understanding the mathematical foundations of cryptographic systems. This paper is a guide for studying the mathematics of the Merkle-Hellman knapsack cryptosystem, beginning with a review of relevant modular arithmetic and proceeding through key theorems and proofs. At the end, we examine its vulnerabilities and explain why the cryptosystem is no longer considered secure.
+\end{abstract}
+
+
+\maketitle
+
+\section{Modular arithmetic}
+
+Suppose you divide two integers $a$ and $n$, then we will have the following equation:
+\[\frac{a}{n} = q \text{ remainder } r\]
+where $a$ is the dividend, $n$ is the divisor, $q$ is the quotient, and $r$ is the remainder. 
+In this case,  {$a \text{ mod } n = r $. \newline
+Another way to write this is \textbf{$a = n\cdot q + r$} where $0 \leq r < n$. In fact, this way is more useful when it comes to dealing with modulus arithmetic as we will see.
+
+\subsubsection*{Theorem 1: Proof of $(a + n\cdot k) \text{ mod }n$ = $a$ mod $n$ where $a,k \in \mathbb{Z}, n \in \mathbb{Z} - \{0\}$.\newline}
+Let $(a + n\cdot k) \text{ mod }n = r$. As we saw earlier, we can write that as $a + n\cdot k = n\cdot q_1 + r$. So,
+\begin{align*}
+a &= n\cdot q_1 - n\cdot k + r  \\
+&=  n \cdot (q_1 -k) + r \\
+&=  n\cdot q_2 + r
+\end{align*}
+
+So, $a \text{ mod } n = r$.
+Therefore, $(a + n\cdot k) \text{ mod }n$ = $a$ mod $n$ $\blacksquare$
+
+\subsubsection*{Theorem 2: Proof of (($a$ mod $n$) + ($b$ mod $n$)) mod $n$ = $(a + b)$ mod $n$ where $a,b\in \mathbb{Z}$.\newline}
+
+Let us reuse the idea from the \textit{Theorem 1} proof. let $a$ mod $n$ = $r_1$, and $b$ mod $n$ = $r_2$. 
+So, $a = n\cdot k_1 + r_1 \text{ and } b=n\cdot k_2+r_2$.
+\newline
+Let $r_1 + r_2 = q\cdot n + r_3$, where $0 \leq r_3 <n$
+. Let us look at $a+b$.
+\begin{align*}
+a + b &= n\cdot k_1 + n\cdot k_2 +r_1+r_2  \\
+ &= n\cdot (k_1+k_2) + r_1 + r_2 \\
+&= n\cdot k_3 + r_3
+\end{align*}
+So, $(a+b) \text{ mod } n = r_3$. Now, let us look at the left-hand side of the equation we are trying to prove.
+\begin{align*}
+((a \text{ mod } n) + (b \text{ mod } n)) \text{ mod } n &= (r_1 + r_2)\text{ mod } n \\
+& = q\cdot n + r_3 \text{ mod } n \\
+ &= r_3 \text{ mod } n \\ 
+ &= r_3 
+\end{align*}
+Hence, (($a$ mod $n$) + ($b$ mod $n$)) mod $n$ = $(a + b)$ mod $n = r_3 \blacksquare\ $ 
+
+\subsubsection* {Theorem 3: Proof of (($a$ mod $n$) $\cdot$ ($b$ mod $n$)) mod $n$ = $(a \cdot b)$ mod $n$ where $a,b\in \mathbb{Z}$.\newline}
+Let $a$ mod $n$ = $r_1$, and $b$ mod $n$ = $r_2$. So, $a = n\cdot k_1 + r_1, b=n\cdot k_2+r_2$. \newline
+Now $r_1 \cdot r_2 = n\cdot k_3 + r_3, \text{ where } 0 \leq r_3 < n$.
+\begin{align*}
+((a \text{ mod } n) \cdot (b \text{ mod } n)) \text{ mod } n &= (r_1\cdot r_2)\text{ mod } n \\
+&= (n\cdot k_3 + r_3) \text{ mod } n \\
+&= r_3 \text{ mod } n \\
+&= r_3
+\end{align*}
+Now, let us consider the right-hand side of the equation we are trying to prove.
+\begin{align*}
+ (a\cdot b) \text{ mod } n &= n^2\cdot k_1\cdot k_1+ n\cdot k_1\cdot r_2 + n\cdot k_2\cdot r_1 + r_1\cdot r_2 \\
+ &= (n\cdot k_4 + r_1\cdot r_2) \text{ mod } n \\
+ &= (r_1 \cdot r_2) \text{ mod } n \\
+ &= r_3
+\end{align*}
+Hence,  (($a$ mod $n$) $\cdot$ ($b$ mod $n$)) mod $n$ = $(a \cdot b)$ mod $n = r_3 \blacksquare $
+
+\subsubsection*{Definitions of multiplicative inverse and totient function}
+
+\begin{itemize}
+    \item[] Multiplicative inverse: A multiplicative inverse of $x \text{ mod } n$, denoted by $x^{-1} \text{ mod } n$ would be the number such that $(x \cdot x^{-1})\text{ mod } n = 1 \text{ mod } n$.
+    \item[] Totient function: $\Phi(n)$ is the count of the positive integers less than $n$ that are relatively prime to $n$.
+    
+\end{itemize}
+
+\section{The Euclidean algorithm and Bézout’s identity}
+A lot of public cryptosystems like the Merkle–Hellman knapsack cryptosystem rely on having two numbers that are relatively prime to each other because the inverse $x^{-1}\text{ mod } n$ exists only when $x$ and $n$ are relatively prime to each other. This inverse can help during the decoding process because $x\cdot x^{-1} \text{ mod } n = 1 \text{ mod } n$.\newline
+Let us first define $gcd(a,b)$ before we start using it. The greatest common divisor of integers $a$ and $b$ is the product of their shared primes to the minimum order. Note that the $gcd(a,b) =1$ if $a$ and $b$ are relatively prime to each other since they share no primes.
+
+\subsubsection*{Theorem 4: If $a = b\cdot q + r$, then $gcd(a,b) = gcd(b,r)$.\newline}
+Let $D$ be the set of divisors $d$ such that $d|a$ and $d|b$. On the other hand, let $D' $ be the set of divisors $d' $ such that $d' |b$ and $d' |r$.
+Now, for $d \in D$, $d|(a-bq)$ since $d|a$ and $d|b$. Since $d|(a-bq)$ and $r=a-bq$, $d|r$. So, $D \subseteq D'$.\newline
+Similarly, for $d' \in D'$, $d'|(bq+r)$ since $d'|b$ and $d'|r$. Since $d'|(bq+r)$ and $a=bq+r$, $d'|a$. So, $D' \subseteq D$.\newline
+Since $D' \subseteq D$, and $D \subseteq D'$, $D=D'$. Since the set of common divisors of $(a,b)$ and $(b,r)$ are the same, $gcd(a,b) = gcd(b,r)$$\blacksquare$
+
+\subsubsection*{The Euclidean algorithm for $gcd(a,b)$.\newline}
+Let $a$ and $b$ be two positive integers. Using \textit{Theorem 1}, we can say $a = b\cdot q + r, \text{  such that } 0\leq r<b$. Now, we can actually form a chain of equations in the following way:
+\begin{align*}
+    a &= b\cdot q + r\text{  such that } 0\leq r<b \\
+    b &= r\cdot q_1 + r_1\text{  such that } 0\leq r_1<r \\
+    r &= r_1\cdot q_2 + r_2\text{  such that } 0\leq r_2<r_1 \\
+     &\vdots \notag \\
+    r_{i-2} &=r_{i-1}\cdot q_{i} + r_i\text{  such that } 0\leq r_i<r_{i-1}\\
+    r_{i-1} &=r_i\cdot q_{i+1} + 0
+\end{align*}
+Using \textit{Theorem 4}, we know that if $a = bq+r$ then $gcd(a,b) = gcd(b,r)$. Applying this to our chain of equations, we get:
+\begin{align*}
+     gcd(a,b) &= gcd(b,r)\\
+        gcd(b,r) &= gcd(r,r_1)\\
+        gcd(r,r_1) &= gcd(r_1, r_2)\\
+         &\vdots \notag \\
+        gcd(r_{i-2}, r_{i-1}) &= gcd(r_{i-1}, r_i) \\
+        gcd(r_{i-1}, r_{i}) &= gcd(r_i, 0) = r_i \\
+\end{align*}
+Hence, $gcd(a,b) = r_i. \blacksquare$
+\subsubsection*{Bézout's identity.\newline}
+Consider two integers $0 < b < a$. Consider the equations of the Euclidean algorithm that gave $gcd(a,b) = r_i$. Let us rewrite all of those equations by having the remainder in the left-hand side of the equation except for the last equation.
+\begin{align}
+     r &= a - b\cdot q \\
+     r_1 &= b - r\cdot q_1 \\
+     r_2 &= r - r_1\cdot q_2 \\
+     &\vdots \notag \\
+     r_{i-2} &= r_{i-4} - r_{i-3}\cdot q_{i-2}\\
+     r_{i-1} &= r_{i-3} - r_{i-2}\cdot q_{i-1}\\
+     r_{i} &= r_{i-2} - r_{i-1}\cdot q_i
+\end{align}
+       
+     Now, consider $(6)$ which tells us $r_{i}=r_{i-2} - r_{i-1}\cdot q_i$ where $r_i$ is in terms of $r_{i-1}$ and $r_{i-2}$. Now, if we substitute the equation for $r_{i-1}$ from $(5)$ into $(6)$, we get $r_i$ in terms of $r_{i-2}$ and $r_{i-3}$.
+     If we then substitute the equation of $r_{i-2}$ from $(4)$, we get $r_i$ in terms of $r_{i-3}$ and $r_{i-4}$. So, if we keep substituting backwards, we eventually get $r_i$ in terms of $a$ and $b$. Let the coefficients then be $x$ and $y$ for $a$ and $b$ respectively. So, $ax + by = r_i = gcd(a,b)$, where $x,y \in \mathbb{Z}$. We have shown that for any two integers, their $gcd$ can always be expressed as a linear combination of those two numbers. 
+    
+\subsubsection*{Theorem 5:  $b^{-1} \text { mod } a$ exists if $a$ and $b$ are relatively prime to each other.\newline}
+If $a$ and $b$ are relatively prime to each other, we know that $gcd(a,b) = 1$. Using Bézout's identity, we can say $a\cdot x + b\cdot y = 1$. Taking mod $a$ on both sides, we get 
+\begin{align*}
+    (a\cdot x + b\cdot y) \text { mod } a &= 1 \text{ mod }a \\
+    \textit{Or, } (b\cdot y) \text { mod } a &= 1\text { mod } a && \textit{Theorem 1} \\
+\end{align*}
+
+     This shows that if $a$ and $b$ are relatively prime to each other, then $(b\cdot y)  \text { mod } a = 1  \text { mod } a$. This means that the inverse of $b$ is $y$ since $(b\cdot y) \text { mod } a = 1 \text { mod } a$.
+     We have shown that $b^{-1}\text{ mod } a$ exists if $a$ and $b$ are relatively prime to each other.
+
+\section{The Merkle–Hellman knapsack cryptosystem}
+\subsubsection*{Knapsack review.\newline}
+
+Let us quickly review how knapsack works. The knapsack problem has a set of $n$ weights $W_0,W_1,...,W_{n-1}$, and a sum $S$ such that $S = a_0\cdot W_0 + a_1\cdot W_1 + \text{ ... }  + a_{n-1}\cdot W_{n-1}$ where $a_i \in \{0,1\}$. For a given sum $S$, we need find $a_0, a_1, .., a_{n-1}$ provided that is possible. We know that solving this problem is known to be NP-complete$^{[1]}$.\newline
+A superincreasing knapsack is a special case knapsack such that the weights are ordered from low to high, and that a given weight $W_i > \sum_{n=0}^{i-1} W_n$. In other words, each weight is greater than sum of all previous weights. Solving this knapsack takes only $O(n)$ time complexity since for a given $S$, we can just start with the largest weight and move towards the smaller weights.\newline
+Now, Let us construct a knapsack cryptosystem.
+\begin{enumerate}
+    \item[1.] Generate a superincreasing knapsack of $a$ weights: $\{W_0, W_1, ..., W_{a-1}\}$
+    \item[2.] Pick two numbers $m$ and $n$ such that $m$ and $n$ are relatively prime to each other. From \textit{Theorem 5}, we know that $m^{-1}$ exists such that $(m\cdot m^{-1}) \text { mod } n = 1 \text { mod } n$.
+    \item[3.] Calculate $m^{-1}$ using the euclidean algorithm.
+    \item[4.] Make sure that $n$ is greater than the sum of all the weights in our super-increasing knapsack.
+    \item[5.] Convert this super-increasing knapsack to a general knapsack by computing $(W_i \cdot m) \text{ mod } n $. So, our general knapsack should look like : \[\{(W_0 \cdot m) \text{ mod } n, (W_1 \cdot m) \text{ mod } n, ..., (W_{a-1} \cdot m) \text{ mod } n\}\]
+    \item[6.] The general knapsack becomes our public key while the super increasing knapsack along with $m^{-1}$ becomes our private key.
+\end{enumerate}
+
+\subsubsection*{Encryption.\newline}
+Now, let us quickly see how encryption is done. To encrypt an integer $A$, we take the binary representation of $A$ extended/shortened to $a$ bits. Then the 1 bits are used select the elements of the general knapsack that are summed to give the sum $S$ which is our ciphertext. For example, a cipher text can be of the kind: $S = (W_0 \cdot m) \text{ mod } n +(W_{2} \cdot m) \text{ mod } n + (W_{a-1} \cdot m) \text{ mod } n $. This means our message's binary representation is : $101\ldots001$
+ where only three bits are 1s.
+
+\subsubsection*{Decryption.\newline}
+To decrypt cipher text $S$, we would find $(S \cdot m^{-1}) \text{ mod } n$ and solve for the private super-increasing knapsack. If we let $S = (W_0 \cdot m) \text{ mod } n +(W_{2} \cdot m) \text{ mod } n + (W_{a-1} \cdot m) \text{ mod } n $: 
+\begin{align*}
+    (S \cdot m^{-1}) \text{ mod } n &= ((W_0 \cdot m) \text{ mod } n +(W_{2} \cdot m) \text{ mod } n + (W_{a-1} \cdot m) \text{ mod } n)\cdot m^{-1}) \text{ mod } n \\
+    &= ((W_0 \cdot m \cdot m^{-1} ) \text{ mod } n +(W_{2} \cdot m \cdot m^{-1}) \text{ mod } n + (W_{a-1} \cdot m \cdot  m^{-1}) \text{ mod } n)) \text{ mod } n && \textit{Theorem 3}\\
+    &= (W_0 \text{ mod } n +W_{2} \text{ mod } n + W_{a-1} \text{ mod } n) \text{ mod } n \\
+    &= (W_0 + W_{2} + W_{a-1}) \text{ mod } n\\
+    &= (W_0 + W_{2} + W_{a-1}) \text{ mod } n\\
+    &= W_0 + W_2 + W_{a-1}
+\end{align*}
+$(W_0 + W_{2} + W_{a-1}) \text{ mod } n = W_0 + W_2 + W_{a-1}$ holds because, during the construction of the knapsack cryptosystem, it was required that $n$ be greater than the sum of all the weights in the super-increasing sequence. As a result, $W_0 + W_{2} + W_{a-1} < n$. So, $W_0 + W_{2} + W_{a-1} \text{ mod } n = W_0 + W_2 + W_{a-1}$.\newline So, this implies that, when solving the super-increasing knapsack, the bits selected during encryption using the public knapsack will correspond exactly to those identified during decryption with the private knapsack. As a result, the original message, such as $101\ldots001$, is successfully recovered. Therefore, decryption works as intended.
+
+\section{Insecurity of the Merkle–Hellman Knapsack Cryptosystem}
+
+Although the Merkle–Hellman knapsack cryptosystem was an early and creative public-key cryptosystem, it was eventually shown to be insecure. Although the knapsack cryptosystem is based on an NP-complete problem, the specific way it is implemented in the Merkle–Hellman scheme allows for efficient attacks. These weaknesses have led to the cryptosystem being considered insecure for practical use.
+
+
+\subsubsection*{Shamir’s Attack.\newline}
+Adi Shamir published a polynomial-time attack that effectively broke the original Merkle–Hellman knapsack cryptosystem$^{[2]}$. The key insight is that the modular transformation does not blur the structure of the original super-increasing knapsack. So, the general knapsack that we construct from the superincreasing knapsack is actually a well-organized instance of the knapsack.$^{[3]}$ As a result, Shamir's attack takes advantage of the well-organized general knapsack to reconstruct an equivalent private key. This attack does not require brute-force guessing of the super-increasing sequence but instead uses the weakness in how the public key is generated. For a detailed explanation of this attack, see Shamir’s original paper$^{[2]}$.
+
+\section{Conclusion}
+
+In this paper, we examined the mathematical foundations that support the Merkle–Hellman knapsack cryptosystem, including the Euclidean algorithm and Bézout’s identity, which together explain why modular inverses exist when two numbers are relatively prime. These concepts are essential for understanding how the private and public keys are constructed and how decryption becomes possible. However, despite the creative mathematical foundations, this knapsack cryptosystem system has been proven insecure, most notably through Adi Shamir’s polynomial-time attack in 1982.
+
+\begin{thebibliography}{9}
+\bibitem{NP-complete}
+M. R. Garey and D. S. Johnson, Computers and Intractability: A Guide to the Theory of NP–Completeness, W. H. Freeman \& Company, 1979.
+
+\bibitem{shamir}
+A. Shamir, A polynomial-time algorithm for breaking the basic Merkle-Hellman cryptosystem, IEEE Transactions on Information Theory, vol. IT-30, no. 5, pp. 699–704, September 1984.
+
+\bibitem{info}
+M. Stamp, Information Security: Principles and Practice, Wiley- Interscience, 2005
+
+\end{thebibliography}
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-manuscript.tex'.
